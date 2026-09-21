@@ -1,0 +1,25 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #10130f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+#gameContainer {
+    position: relative;
+}
+
+canvas {
+    background: #1a2f1f;
+    border: 3px solid #3a5a40;
+    border-radius: 6px;
+    display: block;
+}
