@@ -6,6 +6,9 @@
 import { Vehicle } from "./vehicle.js"
 import { Environment } from "./environment.js"
 import { Weather } from "./weather.js"
+import { drawHUD } from "./hud.js"
+import { drawDayNightBackground } from "./dayNightCycle.js"
+import { soundEngine } from "./sound.js"
 import {
     Pothole,
     Wildlife,
@@ -15,24 +18,41 @@ import {
     circleRectCollide
 } from "./obstacle.js"
 
+
 const canvas = document.querySelector("#gameCanvas")
 const ctx = canvas.getContext("2d")
 
-canvas.width = 800
-canvas.height = 500
+const BASE_WIDTH = 800
+const BASE_HEIGHT = 500
+canvas.width = BASE_WIDTH
+canvas.height = BASE_HEIGHT
+
+// ---------------- Responsive sizing ----------------
+// Scales the canvas element visually to fit smaller screens/windows while
+// keeping the drawing resolution (and therefore all game-logic coordinates)
+// fixed at BASE_WIDTH x BASE_HEIGHT. This avoids having to rewrite every
+// obstacle's x/y position for different screen sizes.
+function resizeCanvasToFit() {
+    const maxWidth = Math.min(window.innerWidth * 0.92, BASE_WIDTH)
+    const scale = maxWidth / BASE_WIDTH
+    canvas.style.width = `${BASE_WIDTH * scale}px`
+    canvas.style.height = `${BASE_HEIGHT * scale}px`
+}
+window.addEventListener("resize", resizeCanvasToFit)
+resizeCanvasToFit()
 
 const playerVehicle = new Vehicle(canvas.width * 0.2, canvas.height * 0.5)
 const environment = new Environment(canvas.width, canvas.height)
 const weather = new Weather(canvas.width, canvas.height)
 
+let distanceTravelled = 0
+let lowBatteryWarningPlayed = false
+
 // ---------------- Obstacle setup ----------------
-// A mix of circular and rectangular obstacles, positioned around the solar
-// zone (centre of the canvas) so the player has to navigate around them
-// while managing battery.
 const obstacles = [
     new Pothole(300, 150),
     new Pothole(550, 380),
-    new Wildlife(450, 120, 80),     // patrols 80px left/right of its start point
+    new Wildlife(450, 120, 80),
     new FallenTree(600, 200, 70, 25),
     new ConstructionZone(200, 300, 90, 70),
 ]
@@ -73,9 +93,6 @@ window.addEventListener("keyup", (event) => {
 })
 
 // ---------------- Collision checking ----------------
-// Loops through every obstacle each frame and applies the correct collision
-// test depending on whether it's circular or rectangular, then triggers
-// that obstacle's own effect on the vehicle.
 function checkObstacleCollisions() {
     const vehicleCircle = {
         x: playerVehicle.positionX,
@@ -93,41 +110,15 @@ function checkObstacleCollisions() {
         }
 
         if (collided) {
+            const wasAlreadyColliding = obstacle.isColliding
             obstacle.applyEffect(playerVehicle)
+            // only play the sound on the FIRST frame of a collision, not
+            // every frame while still overlapping — avoids a buzzing noise
+            if (!wasAlreadyColliding) {
+                soundEngine.playCollision()
+            }
         }
     })
-}
-
-// ---------------- HUD ----------------
-function drawHUD() {
-    ctx.font = "14px Arial"
-    ctx.textAlign = "left"
-
-    ctx.fillStyle = "#ffffff"
-    ctx.fillText(`Battery: ${Math.round(playerVehicle.batteryLevel)}%`, 12, 24)
-
-    const barWidth = 120
-    const barHeight = 10
-    ctx.strokeStyle = "#ffffff"
-    ctx.strokeRect(12, 32, barWidth, barHeight)
-    const fillWidth = (playerVehicle.batteryLevel / 100) * barWidth
-    ctx.fillStyle = playerVehicle.batteryLevel > 25 ? "#9be07a" : "#e0577a"
-    ctx.fillRect(12, 32, fillWidth, barHeight)
-
-    ctx.fillStyle = "#ffffff"
-    ctx.fillText(`Speed: ${playerVehicle.getSpeed().toFixed(1)}`, 12, 62)
-
-    if (weather.isRaining) {
-        ctx.fillStyle = "#b4c8ff"
-        ctx.fillText("Rain — visibility reduced", 12, 82)
-    }
-
-    if (playerVehicle.isDisabled) {
-        ctx.fillStyle = "#e0577a"
-        ctx.font = "bold 20px Arial"
-        ctx.textAlign = "center"
-        ctx.fillText("BATTERY DEPLETED — find a Solar Microgrid Zone", canvas.width / 2, 30)
-    }
 }
 
 // ---------------- Main loop ----------------
@@ -143,17 +134,44 @@ function gameLoop() {
         playerVehicle.positionX,
         playerVehicle.positionY
     )
+
+    const wasRecharging = playerVehicle.isRecharging
     weather.applyWindTo(playerVehicle)
     playerVehicle.update(canvas.width, canvas.height, insideSolarZone, environment.loadSheddingActive)
 
+    if (playerVehicle.isRecharging && !wasRecharging) {
+        soundEngine.playRecharge()
+    }
+
+    if (playerVehicle.batteryLevel < 20 && !lowBatteryWarningPlayed) {
+        soundEngine.playLowBatteryWarning()
+        lowBatteryWarningPlayed = true
+    }
+    if (playerVehicle.batteryLevel > 30) {
+        lowBatteryWarningPlayed = false   // reset so the warning can fire again later
+    }
+
+    distanceTravelled += playerVehicle.getSpeed()
+
     obstacles.forEach(obstacle => obstacle.update())
     checkObstacleCollisions()
+
+ 
+    
+    // ---------------- Day/Night Cycle 2.3 ----------------
+// The background becomes darker when load shedding is active.
+drawDayNightBackground(
+    ctx,
+    canvas.width,
+    canvas.height,
+    environment.loadSheddingActive
+)
 
     environment.draw(ctx)
     obstacles.forEach(obstacle => obstacle.draw(ctx))
     playerVehicle.draw(ctx)
     weather.draw(ctx)
-    drawHUD()
+    drawHUD(ctx, canvas.width, playerVehicle, weather, distanceTravelled)
 }
 
 gameLoop()
