@@ -23,8 +23,8 @@ export class Vehicle {
 
         // --- Solar Reserve / Battery system ---
         this.batteryLevel = 100                // percentage, 0–100
-        this.batteryDrainPerFrameThrusting = 0.05
-        this.batteryDrainPerFrameIdle = 0.008   // small passive drain even while idle
+        this.batteryDrainPerFrameThrusting = 0.02
+        this.batteryDrainPerFrameIdle = 0.004   // small passive drain even while idle
         this.batteryRechargePerFrame = 0.35     // recharge rate while inside a Solar Microgrid Zone
         this.isRecharging = false
         this.isDisabled = false                 // true when battery hits 0 — vehicle can't move

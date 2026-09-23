@@ -69,7 +69,7 @@ export class Pothole extends Obstacle {
     applyEffect(vehicle) {
         vehicle.velocityX *= 0.3
         vehicle.velocityY *= 0.3
-        vehicle.batteryLevel = Math.max(0, vehicle.batteryLevel - 4)
+        vehicle.batteryLevel = Math.max(0, vehicle.batteryLevel - 2)
         this.triggerCollisionFlash()
     }
 
