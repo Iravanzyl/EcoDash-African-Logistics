@@ -12,7 +12,7 @@ export function drawDayNightBackground(
         ctx.fillStyle = "#101522"
     } else {
         // Light/day background when there is no load shedding
-        ctx.fillStyle = "#87CEEB"
+        ctx.fillStyle = "#4dabd1"
     }
 
     ctx.fillRect(0, 0, width, height)
