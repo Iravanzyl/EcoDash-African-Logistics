@@ -41,6 +41,8 @@ class Obstacle {
         this.type = type
         this.isColliding = false        // used for visual feedback
         this.flashTimer = 0             // frames remaining to show a collision flash
+        this.isCurrentlyTouching = false  // tracks actual contact, separate from the flash timer
+        this.continuousEffect = false     // true only for obstacles meant to re-apply every frame (e.g. ConstructionZone)
     }
 
     triggerCollisionFlash() {
@@ -174,6 +176,7 @@ export class ConstructionZone extends Obstacle {
         super(x, y, "constructionZone")
         this.width = width
         this.height = height
+        this.continuousEffect = true   // deliberately re-applies every frame while inside
     }
 
     update() {

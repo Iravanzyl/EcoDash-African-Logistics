@@ -151,11 +151,22 @@ function checkObstacleCollisions() {
         }
 
         if (collided) {
-            const wasAlreadyColliding = obstacle.isColliding
-            obstacle.applyEffect(playerVehicle)
-            if (!wasAlreadyColliding) {
+            // Most obstacles should only apply their effect ONCE per contact,
+            // not every frame the vehicle overlaps them — otherwise a slow-
+            // moving collision (e.g. a pothole cutting velocity to 30%) keeps
+            // re-triggering the penalty dozens of times a second.
+            // continuousEffect obstacles (ConstructionZone) are the deliberate
+            // exception — they're meant to drag on the vehicle every frame
+            // it remains inside the zone.
+            if (!obstacle.isCurrentlyTouching || obstacle.continuousEffect) {
+                obstacle.applyEffect(playerVehicle)
+            }
+            if (!obstacle.isCurrentlyTouching) {
                 soundEngine.playCollision()
             }
+            obstacle.isCurrentlyTouching = true
+        } else {
+            obstacle.isCurrentlyTouching = false
         }
     })
 }
