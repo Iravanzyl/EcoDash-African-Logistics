@@ -47,10 +47,4 @@ export function drawHUD(ctx, canvasWidth, vehicle, weather, distanceTravelled) {
         ctx.fillText("Rain — visibility reduced", 18, 96)
     }
 
-    if (vehicle.isDisabled) {
-        ctx.fillStyle = HUD_COLORS.batteryLow
-        ctx.font = "bold 20px Arial"
-        ctx.textAlign = "center"
-        ctx.fillText("BATTERY DEPLETED — find a Solar Microgrid Zone", canvasWidth / 2, 30)
-    }
 }
