@@ -31,6 +31,8 @@ See `docs/African_Context_Report.docx` for the full context report and mathemati
    ```
    git clone https://github.com/Iravanzyl/EcoDash-African-Logistics
    ```
+   Or open the Live Application: https://iravanzyl.github.io/EcoDash-African-Logistics/
+
 2. Open the project folder in Visual Studio Code.
 3. Open `index.html` directly in a browser, or use the VS Code "Live Server" extension for auto-reload during
    development.
